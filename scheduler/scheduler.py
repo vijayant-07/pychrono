@@ -11,7 +11,10 @@ async def run_scheduler():
     nats = NATSClient()
 
     await nats.connect()
-    await nats.setup_stream()
+    try:
+        await nats.setup_stream()
+    except Exception:
+        pass
 
     while True:
 

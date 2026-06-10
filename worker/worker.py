@@ -122,6 +122,7 @@ async def run_worker():
     nats = NATSClient()
 
     await nats.connect()
+    print("Worker connected to NATS")
 
     await nats.js.subscribe(
         "tasks.execute",

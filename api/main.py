@@ -3,6 +3,11 @@ import json
 import time
 import uuid
 from datetime import datetime, timezone
+import asyncio
+from contextlib import asynccontextmanager
+
+from scheduler.scheduler import run_scheduler
+from worker.worker import run_worker
 
 from fastapi import (
     FastAPI,
@@ -27,9 +32,27 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+@asynccontextmanager
+async def lifespan(app):
+
+    print("Starting Scheduler...")
+
+    asyncio.create_task(
+        run_scheduler()
+    )
+
+    print("Starting Worker...")
+
+    asyncio.create_task(
+        run_worker()
+    )
+
+    yield
+
 app = FastAPI(
     docs_url=None,
-    redoc_url=None
+    redoc_url=None,
+    lifespan=lifespan
 )
 
 store = RedisStore()
