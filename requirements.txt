@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+redis
+nats-py
+jinja2
+croniter
+pydantic

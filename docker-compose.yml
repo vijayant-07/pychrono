@@ -1,4 +1,48 @@
-FROM ubuntu:latest
-LABEL authors="vijay"
+version: "3.9"
 
-ENTRYPOINT ["top", "-b"]
+services:
+
+  redis:
+    image: redis
+    container_name: pychrono-redis
+    ports:
+      - "6379:6379"
+
+  nats:
+    image: nats
+    container_name: pychrono-nats
+    command: "-js"
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+
+  api:
+    build: .
+    container_name: pychrono-api
+
+    ports:
+      - "8000:8000"
+
+    depends_on:
+      - redis
+      - nats
+
+  scheduler:
+    build: .
+    container_name: pychrono-scheduler
+
+    command: python -m scripts.start_scheduler
+
+    depends_on:
+      - redis
+      - nats
+
+  worker:
+    build: .
+    container_name: pychrono-worker
+
+    command: python -m scripts.start_worker
+
+    depends_on:
+      - redis
+      - nats

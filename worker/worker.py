@@ -4,6 +4,11 @@ import time
 from core.nats_client import NATSClient
 from core.models import Job
 from storage.redis_store import RedisStore
+from core.events import (
+    publish_job_event
+)
+from croniter import croniter
+from datetime import datetime
 
 store = RedisStore()
 
@@ -31,8 +36,31 @@ async def message_handler(msg):
 
         await process_job(job)
 
-        job.status = "COMPLETED"
-        store.update_job(job)
+        if job.cron:
+
+            next_run = croniter(
+                job.cron,
+                datetime.now()
+            ).get_next()
+
+            job.run_at = next_run
+
+            job.status = "PENDING"
+
+            store.add_job(job)
+
+            store.update_job(job)
+
+            print(
+                f"Cron job rescheduled: "
+                f"{job.id}"
+            )
+
+        else:
+
+            job.status = "COMPLETED"
+
+            store.update_job(job)
 
         print(
             f"Job completed: {job.id}"

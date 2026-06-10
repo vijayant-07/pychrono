@@ -15,6 +15,8 @@ class Job:
 
     last_error: str = ""
 
+    cron: str = ""
+
     def to_json(self):
         return json.dumps(self.__dict__).encode()
 

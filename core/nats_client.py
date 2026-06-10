@@ -3,7 +3,7 @@ from nats.aio.client import Client as NATS
 from nats.js.api import StreamConfig
 
 class NATSClient:
-    def __init__(self, url="nats://localhost:4222"):
+    def __init__(self, url="nats://nats:4222"):
         self.url = url
         self.nc = NATS()
         self.js = None

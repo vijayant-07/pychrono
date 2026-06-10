@@ -11,6 +11,12 @@ import time
 import uuid
 import json
 
+from fastapi import WebSocket
+
+from api.websocket_manager import (
+    manager
+)
+
 app = FastAPI()
 
 store = RedisStore()
@@ -57,7 +63,9 @@ async def create_job(req: CreateJobRequest):
         id=str(uuid.uuid4()),
         task=req.task,
         payload=req.payload,
-        run_at=time.time() + req.delay_seconds
+        run_at=time.time() + req.delay_seconds,
+
+        cron=req.cron or ""
     )
 
     store.add_job(job)
@@ -154,3 +162,23 @@ async def dead_letter_dashboard(
             "jobs": store.get_dead_letter_jobs()
         }
     )
+
+@app.websocket("/ws")
+async def websocket_endpoint(
+    websocket: WebSocket
+):
+
+    await manager.connect(
+        websocket
+    )
+
+    try:
+
+        while True:
+            await websocket.receive_text()
+
+    except Exception:
+
+        manager.disconnect(
+            websocket
+        )

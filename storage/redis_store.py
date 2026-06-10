@@ -3,7 +3,7 @@ import json
 import time
 
 r = redis.Redis(
-    host="localhost",
+    host="redis",
     port=6379,
     decode_responses=True
 )
@@ -97,7 +97,8 @@ class RedisStore:
             "RUNNING": 0,
             "RETRYING": 0,
             "COMPLETED": 0,
-            "FAILED": 0
+            "FAILED": 0,
+            "CRON": 0
         }
 
         jobs = self.get_all_jobs()
@@ -112,6 +113,9 @@ class RedisStore:
             )
 
             stats[status] += 1
+
+            if job.get("cron"):
+                stats["CRON"] += 1
 
         return stats
     
