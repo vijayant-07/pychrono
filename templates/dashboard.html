@@ -1,453 +1,512 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PyChrono Dashboard</title>
-
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background: #f5f7fb;
+        }
 
+        .app-shell {
+            max-width: 1320px;
+        }
 
+        .metric-card {
+            border: 0;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0;
+            text-transform: uppercase;
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-size: 2rem;
+            font-weight: 750;
+            line-height: 1.1;
+        }
+
+        .toolbar-card,
+        .table-card,
+        .chart-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+        }
+
+        .job-id {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.86rem;
+        }
+
+        .payload-preview {
+            max-width: 240px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .chart-wrap {
+            height: 230px;
+        }
+
+        .form-textarea {
+            min-height: 104px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.9rem;
+        }
+    </style>
 </head>
 
-<body class="bg-light">
-
-<div class="container mt-5">
-
-    <h1 class="mb-4">
-        🚀 PyChrono Dashboard
-    </h1>
-
-    <a
-    href="/dashboard/dead-letter"
-    class="btn btn-danger mb-3">
-
-    💀 Dead Letter Queue
-
-</a>
-
-    <div class="row">
-
-        <div class="col-md-3">
-
-            <div class="card text-white bg-warning mb-3">
-
-                <div class="card-body">
-
-                    <h5>Pending</h5>
-
-                    <h2>
-                        {{ stats.PENDING }}
-                    </h2>
-
-                </div>
-
-            </div>
-
+<body>
+<main class="container-fluid app-shell py-4">
+    <header class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="h3 mb-1">PyChrono Dashboard</h1>
+            <div class="text-secondary">Job scheduling, retries, and queue health</div>
         </div>
 
-        <div class="col-md-3">
-
-            <div class="card text-white bg-primary mb-3">
-
-                <div class="card-body">
-
-                    <h5>Running</h5>
-
-                    <h2>
-                        {{ stats.RUNNING }}
-                    </h2>
-
-                </div>
-
-            </div>
-
+        <div class="d-flex align-items-center gap-3">
+            <span class="text-secondary">{{ user.name }}</span>
+            <a href="/dashboard/dead-letter" class="btn btn-outline-danger">
+                Dead Letter Queue
+            </a>
+            <a href="/logout" class="btn btn-outline-secondary">
+                Logout
+            </a>
         </div>
+    </header>
 
-        <div class="col-md-3">
-
-            <div class="card text-white bg-success mb-3">
-
+    <section class="row g-3 mb-4">
+        <div class="col-6 col-xl-2">
+            <div class="card metric-card">
                 <div class="card-body">
-
-                    <h5>Completed</h5>
-
-                    <h2>
-                        {{ stats.COMPLETED }}
-                    </h2>
-
+                    <div class="metric-label">Pending</div>
+                    <div class="metric-value">{{ stats.PENDING }}</div>
                 </div>
-
             </div>
-
         </div>
-
-        <div class="col-md-3">
-
-            <div class="card text-white bg-danger mb-3">
-
+        <div class="col-6 col-xl-2">
+            <div class="card metric-card">
                 <div class="card-body">
-
-                    <h5>Failed</h5>
-
-                    <h2>
-                        {{ stats.FAILED }}
-                    </h2>
-
+                    <div class="metric-label">Running</div>
+                    <div class="metric-value">{{ stats.RUNNING }}</div>
                 </div>
-
             </div>
-
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-xl-2">
+            <div class="card metric-card">
+                <div class="card-body">
+                    <div class="metric-label">Completed</div>
+                    <div class="metric-value">{{ stats.COMPLETED }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-2">
+            <div class="card metric-card">
+                <div class="card-body">
+                    <div class="metric-label">Failed</div>
+                    <div class="metric-value">{{ stats.FAILED }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-2">
+            <div class="card metric-card">
+                <div class="card-body">
+                    <div class="metric-label">Cron Jobs</div>
+                    <div class="metric-value">{{ stats.CRON }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-2">
+            <div class="card metric-card">
+                <div class="card-body">
+                    <div class="metric-label">Success Rate</div>
+                    <div class="metric-value">{{ dashboard_metrics.success_rate }}%</div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-    <div class="card text-white bg-dark mb-3">
+    <section class="row g-3 mb-4">
+        <div class="col-md-6 col-xl-3">
+            <div class="card metric-card">
+                <div class="card-body">
+                    <div class="metric-label">Failed Jobs Chart</div>
+                    <div class="metric-value">{{ dashboard_metrics.failed_jobs }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="card metric-card">
+                <div class="card-body">
+                    <div class="metric-label">Jobs Created Today</div>
+                    <div class="metric-value">{{ dashboard_metrics.jobs_created_today }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="card metric-card">
+                <div class="card-body">
+                    <div class="metric-label">Jobs Completed Today</div>
+                    <div class="metric-value">{{ dashboard_metrics.jobs_completed_today }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="card metric-card">
+                <div class="card-body">
+                    <div class="metric-label">Dispatched</div>
+                    <div class="metric-value">{{ stats.DISPATCHED }}</div>
+                </div>
+            </div>
+        </div>
+    </section>
 
+    <section class="row g-3 mb-4">
+        <div class="col-lg-6">
+            <div class="card chart-card">
+                <div class="card-header bg-white">
+                    <h2 class="h6 mb-0">Success Rate Chart</h2>
+                </div>
+                <div class="card-body chart-wrap">
+                    <canvas id="successRateChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card chart-card">
+                <div class="card-header bg-white">
+                    <h2 class="h6 mb-0">Failed Jobs Chart</h2>
+                </div>
+                <div class="card-body chart-wrap">
+                    <canvas id="failedJobsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="card toolbar-card mb-4">
         <div class="card-body">
+            <ul class="nav nav-tabs mb-3" id="jobTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button
+                        class="nav-link active"
+                        id="one-time-tab"
+                        data-bs-toggle="tab"
+                        data-bs-target="#one-time-pane"
+                        type="button"
+                        role="tab">
+                        Create One-Time Job
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button
+                        class="nav-link"
+                        id="cron-tab"
+                        data-bs-toggle="tab"
+                        data-bs-target="#cron-pane"
+                        type="button"
+                        role="tab">
+                        Create Cron Job
+                    </button>
+                </li>
+            </ul>
 
-            <h5>
-                Cron Jobs
-            </h5>
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="one-time-pane" role="tabpanel">
+                    <form class="row g-3 align-items-end" onsubmit="createJob(event, 'one-time')">
+                        <div class="col-md-3">
+                            <label class="form-label" for="oneTimeTask">Task</label>
+                            <input id="oneTimeTask" class="form-control" value="print" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label" for="oneTimeDelay">Delay Seconds</label>
+                            <input id="oneTimeDelay" type="number" min="0" value="10" class="form-control" required>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label" for="oneTimePayload">Payload JSON</label>
+                            <textarea id="oneTimePayload" class="form-control form-textarea">{"message":"Hello from PyChrono"}</textarea>
+                        </div>
+                        <div class="col-md-2 d-grid">
+                            <button class="btn btn-primary" type="submit">Schedule</button>
+                        </div>
+                    </form>
+                </div>
 
-            <h2>
-                {{ stats.CRON }}
-            </h2>
+                <div class="tab-pane fade" id="cron-pane" role="tabpanel">
+                    <form class="row g-3 align-items-end" onsubmit="createJob(event, 'cron')">
+                        <div class="col-md-3">
+                            <label class="form-label" for="cronTask">Task</label>
+                            <input id="cronTask" class="form-control" value="print" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="cronExpression">Cron Expression</label>
+                            <input id="cronExpression" class="form-control" value="*/5 * * * *" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="cronPayload">Payload JSON</label>
+                            <textarea id="cronPayload" class="form-control form-textarea">{"message":"Scheduled cron job"}</textarea>
+                        </div>
+                        <div class="col-md-2 d-grid">
+                            <button class="btn btn-primary" type="submit">Create Cron</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
+            <div id="formError" class="alert alert-danger mt-3 d-none"></div>
+        </div>
+    </section>
+
+    <section class="card table-card">
+        <div class="card-header bg-white">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <h2 class="h5 mb-0">Jobs</h2>
+                <div class="d-flex flex-wrap gap-2">
+                    <input
+                        type="search"
+                        id="searchInput"
+                        class="form-control"
+                        placeholder="Search job ID or task"
+                        oninput="filterJobs()">
+                    <select id="statusFilter" class="form-select" onchange="filterJobs()">
+                        <option value="ALL">All statuses</option>
+                        <option value="PENDING">Pending</option>
+                        <option value="DISPATCHED">Dispatched</option>
+                        <option value="RUNNING">Running</option>
+                        <option value="RETRYING">Retrying</option>
+                        <option value="COMPLETED">Completed</option>
+                        <option value="FAILED">Failed</option>
+                    </select>
+                </div>
+            </div>
         </div>
 
-    </div>
-
-</div>
-
-    </div>
-    <div class="row mb-3">
-
-    <div class="col-md-6">
-
-        <input
-            type="text"
-            id="searchInput"
-            class="form-control"
-            placeholder="Search Job ID or Task..."
-            onkeyup="filterTable()">
-
-    </div>
-
-</div>
-
-<div class="mb-3">
-
-    <button class="btn btn-secondary btn-sm"
-            onclick="filterStatus('ALL')">
-        All
-    </button>
-
-    <button class="btn btn-warning btn-sm"
-            onclick="filterStatus('PENDING')">
-        Pending
-    </button>
-
-    <button class="btn btn-info btn-sm"
-            onclick="filterStatus('DISPATCHED')">
-        Dispatched
-    </button>
-
-    <button class="btn btn-primary btn-sm"
-            onclick="filterStatus('RUNNING')">
-        Running
-    </button>
-
-    <button class="btn btn-success btn-sm"
-            onclick="filterStatus('COMPLETED')">
-        Completed
-    </button>
-
-    <button class="btn btn-danger btn-sm"
-            onclick="filterStatus('FAILED')">
-        Failed
-    </button>
-
-</div>
-
-    <div class="card">
-
-        <div class="card-header">
-
-            <h4>
-                Jobs
-            </h4>
-
+        <div class="table-responsive">
+            <table id="jobsTable" class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Job ID</th>
+                        <th>Task</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Retries</th>
+                        <th>Payload</th>
+                        <th>Last Error</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in jobs %}
+                    <tr data-status="{{ job.status }}">
+                        <td>
+                            <a href="/jobs/{{ job.id }}/view" class="job-id text-decoration-none">
+                                {{ job.id[:8] }}
+                            </a>
+                        </td>
+                        <td>{{ job.task }}</td>
+                        <td>
+                            {% if job.get("cron") %}
+                            <span class="badge text-bg-dark">{{ job.get("cron") }}</span>
+                            {% else %}
+                            <span class="badge text-bg-secondary">One-Time</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge text-bg-{{ 'success' if job.status == 'COMPLETED' else 'danger' if job.status == 'FAILED' else 'primary' if job.status == 'RUNNING' else 'info' if job.status == 'DISPATCHED' else 'warning' if job.status == 'RETRYING' else 'secondary' }}">
+                                {{ job.status }}
+                            </span>
+                        </td>
+                        <td>{{ job.retries }}</td>
+                        <td class="payload-preview">{{ job.payload }}</td>
+                        <td>
+                            {% if job.get("last_error") %}
+                            <span class="text-danger">{{ job.get("last_error")[:70] }}</span>
+                            {% else %}
+                            <span class="text-secondary">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                <a href="/jobs/{{ job.id }}/view" class="btn btn-outline-secondary">
+                                    View
+                                </a>
+                                {% if job.status == "FAILED" %}
+                                <form method="POST" action="/jobs/{{ job.id }}/retry">
+                                    <button class="btn btn-outline-danger" type="submit">
+                                        Retry
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center text-secondary py-5">
+                            No jobs found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
+    </section>
+</main>
 
-        <div class="card-body">
-
-        <table
-    id="jobsTable"
-    class="table table-striped">
-
-    <thead>
-
-        <tr>
-
-            <th>Job ID</th>
-
-            <th>Task</th>
-
-            <th>Cron</th>
-
-            <th>Status</th>
-
-            <th>Retries</th>
-
-            <th>Last Error</th>
-            
-            <th>Actions</th>
-
-        </tr>
-
-    </thead>
-
-    <tbody>
-
-        {% for job in jobs %}
-
-        <tr data-status="{{ job.status }}">
-
-            <td>
-
-    <a
-        href="/jobs/{{ job.id }}/view"
-        class="text-decoration-none">
-
-        {{ job.id[:8] }}
-
-    </a>
-
-</td>
-
-           <td>
-    {{ job.task }}
-</td>
-
-<td>
-
-    {% if job.get("cron") %}
-
-        <span class="badge bg-dark">
-            {{ job.get("cron") }}
-        </span>
-
-    {% else %}
-
-        <span class="badge bg-secondary">
-            One Time
-        </span>
-
-    {% endif %}
-
-</td>
-
-<td>
-
-    {% if job.status == "COMPLETED" %}
-
-                <span class="badge bg-success">
-                    COMPLETED
-                </span>
-
-                {% elif job.status == "FAILED" %}
-
-                <span class="badge bg-danger">
-                    FAILED
-                </span>
-
-                {% elif job.status == "RUNNING" %}
-
-                <span class="badge bg-primary">
-                    RUNNING
-                </span>
-
-                {% elif job.status == "RETRYING" %}
-
-                <span class="badge bg-warning">
-                    RETRYING
-                </span>
-
-                {% elif job.status == "DISPATCHED" %}
-
-                <span class="badge bg-info">
-                    DISPATCHED
-                </span>
-
-                {% else %}
-
-                <span class="badge bg-secondary">
-                    {{ job.status }}
-                </span>
-
-                {% endif %}
-
-            </td>
-
-<td>
-    {{ job.retries }}
-</td>
-
-<td>
-
-{% if job.get("last_error") %}
-
-    <span class="text-danger">
-
-        {{ job.get("last_error")[:50] }}
-
-    </span>
-
-{% else %}
-
-    -
-
-{% endif %}
-
-</td>
-
-<td>
-
-{% if job.status == "FAILED" %}
-
-<form
-    method="POST"
-    action="/jobs/{{ job.id }}/retry">
-
-    <button
-        class="btn btn-danger btn-sm">
-
-        Retry
-
-    </button>
-
-</form>
-
-{% else %}
-
--
-
-{% endif %}
-
-</td>
-
-        </tr>
-
-        {% endfor %}
-
-    </tbody>
-
-</table>
-
-        </div>
-
-    </div>
-
-</div>
 <script>
+const chartData = {{ chart_data | tojson }};
 
-function filterTable() {
-
-    let input =
-        document.getElementById(
-            "searchInput"
-        );
-
-    let filter =
-        input.value.toLowerCase();
-
-    let rows =
-        document.querySelectorAll(
-            "#jobsTable tbody tr"
-        );
-
-    rows.forEach(row => {
-
-        let text =
-            row.textContent.toLowerCase();
-
-        row.style.display =
-            text.includes(filter)
-            ? ""
-            : "none";
-    });
+function showFormError(message) {
+    const error = document.getElementById("formError");
+    error.textContent = message;
+    error.classList.remove("d-none");
 }
 
-function filterStatus(status) {
+function clearFormError() {
+    const error = document.getElementById("formError");
+    error.textContent = "";
+    error.classList.add("d-none");
+}
 
-    let rows =
-        document.querySelectorAll(
-            "#jobsTable tbody tr"
-        );
+function parsePayload(elementId) {
+    const value = document.getElementById(elementId).value.trim();
 
-    rows.forEach(row => {
+    if (!value) {
+        return {};
+    }
 
-        let rowStatus =
-            row.dataset.status;
+    return JSON.parse(value);
+}
 
-        if (
-            status === "ALL" ||
-            rowStatus === status
-        ) {
+async function createJob(event, mode) {
+    event.preventDefault();
+    clearFormError();
 
-            row.style.display = "";
+    let body;
 
+    try {
+        if (mode === "cron") {
+            body = {
+                task: document.getElementById("cronTask").value,
+                payload: parsePayload("cronPayload"),
+                delay_seconds: 0,
+                cron: document.getElementById("cronExpression").value
+            };
         } else {
-
-            row.style.display = "none";
-
+            body = {
+                task: document.getElementById("oneTimeTask").value,
+                payload: parsePayload("oneTimePayload"),
+                delay_seconds: Number(document.getElementById("oneTimeDelay").value),
+                cron: ""
+            };
         }
+    } catch (error) {
+        showFormError("Payload must be valid JSON.");
+        return;
+    }
+
+    const response = await fetch("/jobs", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+    });
+
+    if (response.ok) {
+        location.reload();
+        return;
+    }
+
+    showFormError("Job could not be scheduled.");
+}
+
+function filterJobs() {
+    const search = document.getElementById("searchInput").value.toLowerCase();
+    const status = document.getElementById("statusFilter").value;
+    const rows = document.querySelectorAll("#jobsTable tbody tr[data-status]");
+
+    rows.forEach(row => {
+        const matchesSearch = row.textContent.toLowerCase().includes(search);
+        const matchesStatus = status === "ALL" || row.dataset.status === status;
+        row.style.display = matchesSearch && matchesStatus ? "" : "none";
     });
 }
 
-</script>
-<script>
+new Chart(document.getElementById("successRateChart"), {
+    type: "doughnut",
+    data: {
+        labels: ["Completed", "Failed"],
+        datasets: [{
+            data: [chartData.success, chartData.failed],
+            backgroundColor: ["#16a34a", "#dc2626"],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: "bottom"
+            }
+        },
+        cutout: "68%"
+    }
+});
 
-const socket =
-    new WebSocket(
-        "ws://localhost:8000/ws"
-    );
+new Chart(document.getElementById("failedJobsChart"), {
+    type: "bar",
+    data: {
+        labels: ["Failed"],
+        datasets: [{
+            label: "Jobs",
+            data: [chartData.failed],
+            backgroundColor: "#dc2626",
+            borderRadius: 6
+        }]
+    },
+    options: {
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    precision: 0
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+});
 
-socket.onopen = function() {
-
-    console.log(
-        "WebSocket Connected"
-    );
-
-};
-
-socket.onerror = function(err) {
-
-    console.log(
-        "WebSocket Error",
-        err
-    );
-
-};
+const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+const socket = new WebSocket(`${wsScheme}://${window.location.host}/ws`);
 
 socket.onmessage = function(event) {
-
-    const data =
-        JSON.parse(event.data);
-
-    console.log(
-        "Job Update:",
-        data
-    );
-
+    JSON.parse(event.data);
     location.reload();
-
 };
-
 </script>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

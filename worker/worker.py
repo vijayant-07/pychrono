@@ -59,6 +59,7 @@ async def message_handler(msg):
         else:
 
             job.status = "COMPLETED"
+            job.completed_at = time.time()
 
             store.update_job(job)
 
@@ -107,6 +108,7 @@ async def message_handler(msg):
             job.status = "FAILED"
 
             job.last_error = str(e)
+            job.failed_at = time.time()
 
             store.update_job(job)
 

@@ -2,8 +2,16 @@ import redis
 import json
 import time
 
+import os
+import redis
+
+REDIS_HOST = os.getenv(
+    "REDIS_HOST",
+    "localhost"
+)
+
 r = redis.Redis(
-    host="redis",
+    host=REDIS_HOST,
     port=6379,
     decode_responses=True
 )
@@ -112,6 +120,9 @@ class RedisStore:
                 "PENDING"
             )
 
+            if status not in stats:
+                stats[status] = 0
+
             stats[status] += 1
 
             if job.get("cron"):
@@ -131,6 +142,10 @@ class RedisStore:
         job["status"] = "PENDING"
 
         job["retries"] = 0
+
+        job["last_error"] = ""
+
+        job["failed_at"] = 0
 
         job["run_at"] = time.time() + 5
 

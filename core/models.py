@@ -17,6 +17,10 @@ class Job:
 
     cron: str = ""
 
+    created_at: float = 0.0
+    completed_at: float = 0.0
+    failed_at: float = 0.0
+
     def to_json(self):
         return json.dumps(self.__dict__).encode()
 

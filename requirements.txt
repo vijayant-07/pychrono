@@ -5,3 +5,8 @@ nats-py
 jinja2
 croniter
 pydantic
+authlib
+itsdangerous
+python-dotenv
+httpx
+websockets
