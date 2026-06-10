@@ -65,13 +65,8 @@ async def login_google(
     request: Request
 ):
 
-    redirect_uri = request.url_for(
-        "auth_callback"
-    )
-
-    print(
-        "REDIRECT URI:",
-        redirect_uri
+    redirect_uri = (
+        "https://pychrono-production.up.railway.app/auth/callback"
     )
 
     return await oauth.google.authorize_redirect(
