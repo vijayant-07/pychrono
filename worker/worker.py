@@ -124,11 +124,29 @@ async def run_worker():
     await nats.connect()
     print("Worker connected to NATS")
 
-    await nats.js.subscribe(
-        "tasks.execute",
-        durable="worker-group",
-        cb=message_handler
-    )
+    while True:
+
+        try:
+
+            await nats.js.subscribe(
+                "tasks.execute",
+                durable="worker-group",
+                cb=message_handler
+            )
+
+            print(
+                "Worker subscribed"
+            )
+
+            break
+
+        except Exception as e:
+
+            print(
+                f"Waiting for stream: {e}"
+            )
+
+            await asyncio.sleep(5)
 
     print("Worker is listening...")
 
