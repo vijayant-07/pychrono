@@ -1,43 +1,128 @@
-# 🚀 PyChrono — Distributed Task Scheduler (Python + NATS)
+# 🚀 PyChrono — Distributed Task Orchestration Platform
 
-PyChrono is a **distributed task scheduler** built using Python and NATS (JetStream).
-It allows you to schedule jobs, dispatch them via a message broker, and execute them using distributed workers.
+PyChrono is a distributed task orchestration platform built with Python, FastAPI, Redis, and NATS JetStream.
+
+It enables delayed job execution, recurring cron jobs, distributed worker processing, retry mechanisms, dead-letter queue handling, and job monitoring through a web dashboard.
 
 ---
 
 ## 🧠 Architecture
 
+```text
+                    +----------------+
+                    |    FastAPI     |
+                    | Dashboard/API  |
+                    +-------+--------+
+                            |
+                            v
+                    +----------------+
+                    |     Redis      |
+                    | Job Storage    |
+                    +-------+--------+
+                            |
+                            v
+                    +----------------+
+                    |   Scheduler    |
+                    +-------+--------+
+                            |
+                            v
+                    +----------------+
+                    | NATS JetStream |
+                    +-------+--------+
+                            |
+                            v
+                    +----------------+
+                    | Distributed    |
+                    | Worker Pool    |
+                    +----------------+
 ```
-Client (Script/API)
-        ↓
-   Scheduler Service
-        ↓
- NATS (JetStream Broker)
-        ↓
-     Workers
-        ↓
-  Task Execution
-```
+
+---
+
+## ✨ Features
+
+### Job Scheduling
+
+- Delayed job execution
+- One-time jobs
+- Recurring cron jobs
+- Redis Sorted Set based scheduling
+
+### Distributed Processing
+
+- Event-driven architecture
+- NATS JetStream messaging
+- Horizontally scalable workers
+- AsyncIO-based execution
+
+### Reliability
+
+- Automatic retry mechanism
+- Configurable retry limits
+- Dead Letter Queue (DLQ)
+- Failure tracking and error storage
+
+### Monitoring
+
+- FastAPI REST APIs
+- Interactive dashboard
+- Job search and filtering
+- Job status tracking
+- Job details page
+- Dead Letter Queue dashboard
+
+### Deployment
+
+- Dockerized services
+- Docker Compose support
+- One-command environment startup
 
 ---
 
 ## ⚙️ Tech Stack
 
-* Python (asyncio)
-* NATS (JetStream)
-* Redis (job storage)
-* nats-py (client library)
+### Backend
+
+- Python 3.11
+- FastAPI
+- AsyncIO
+
+### Messaging
+
+- NATS JetStream
+
+### Storage
+
+- Redis
+
+### Scheduling
+
+- Croniter
+
+### Containerization
+
+- Docker
+- Docker Compose
+
+### UI
+
+- Jinja2 Templates
+- Bootstrap 5
 
 ---
 
 ## 📁 Project Structure
 
-```
+```text
 pychrono/
 │
+├── api/
+│   ├── main.py
+│   └── schemas.py
+│
 ├── core/
-│   ├── nats_client.py
 │   ├── models.py
+│   └── nats_client.py
 │
 ├── scheduler/
 │   └── scheduler.py
@@ -48,112 +133,202 @@ pychrono/
 ├── storage/
 │   └── redis_store.py
 │
+├── templates/
+│   ├── dashboard.html
+│   ├── job_details.html
+│   └── dead_letter.html
+│
 ├── scripts/
 │   ├── start_scheduler.py
-│   ├── start_worker.py
-│   └── add_job.py
+│   └── start_worker.py
 │
+├── Dockerfile
+├── docker-compose.yml
+├── requirements.txt
 └── README.md
 ```
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Quick Start
 
-### 1. Clone the repo
+### Clone Repository
 
----
-
-### 2. Install dependencies
-
-```
-pip install nats-py redis
+```bash
+git clone <repository-url>
+cd pychrono
 ```
 
 ---
 
-### 3. Start Infrastructure
+## 🐳 Run Using Docker Compose
 
-#### ▶️ Start NATS (JetStream enabled)
+Start all services:
 
+```bash
+docker compose up --build
 ```
-docker run -p 4222:4222 -p 8222:8222 nats -js
+
+This starts:
+
+- FastAPI
+- Scheduler
+- Worker
+- Redis
+- NATS JetStream
+
+---
+
+## 🌐 Dashboard
+
+Open:
+
+```text
+http://localhost:8000/dashboard
 ```
 
-#### ▶️ Start Redis
+Features:
 
+- View all jobs
+- Search jobs
+- Filter by status
+- Retry failed jobs
+- View dead-letter queue
+- View job details
+
+---
+
+## 📡 API Endpoints
+
+### Create Job
+
+```http
+POST /jobs
 ```
-docker run -p 6379:6379 redis
+
+Example:
+
+```json
+{
+  "task": "print",
+  "payload": {
+    "message": "Hello World"
+  },
+  "delay_seconds": 10
+}
 ```
 
 ---
 
-## ▶️ Running the System
+### Get All Jobs
 
-⚠️ Always run commands using `-m` from project root.
-
----
-
-### 1. Start Scheduler
-
-```
-python -m scripts.start_scheduler
+```http
+GET /jobs
 ```
 
 ---
 
-### 2. Start Worker
+### Get Job
 
-```
-python -m scripts.start_worker
-```
-
----
-
-### 3. Add a Job
-
-```
-python -m scripts.add_job
+```http
+GET /jobs/{job_id}
 ```
 
 ---
 
-## 🧪 Example Job
+### Retry Failed Job
 
-A job looks like:
-
-```python
-Job(
-    id="uuid",
-    task="print",
-    payload={"msg": "Hello World"},
-    run_at=time.time() + 5
-)
+```http
+POST /jobs/{job_id}/retry
 ```
 
 ---
 
-## 🎯 Expected Output
+### Get Statistics
 
-### Scheduler:
-
-```
-Dispatching job: <job_id>
-```
-
-### Worker:
-
-```
-Executing job <job_id> with payload {'msg': 'Hello World'}
+```http
+GET /stats
 ```
 
 ---
 
-## 🧠 Key Concepts
+## ⏰ Cron Jobs
 
-* Message brokers (NATS)
-* Distributed workers
-* Job scheduling using Redis sorted sets
-* Async processing with asyncio
+Create recurring jobs:
+
+```json
+{
+  "task": "print",
+  "payload": {
+    "message": "Recurring Job"
+  },
+  "cron": "*/1 * * * *"
+}
+```
+
+Examples:
+
+```text
+*/1 * * * *   -> Every minute
+*/5 * * * *   -> Every 5 minutes
+0 * * * *     -> Every hour
+```
+
+---
+
+## 🔄 Job Lifecycle
+
+Successful execution:
+
+```text
+PENDING
+    ↓
+DISPATCHED
+    ↓
+RUNNING
+    ↓
+COMPLETED
+```
+
+Failure flow:
+
+```text
+PENDING
+    ↓
+RUNNING
+    ↓
+RETRY
+    ↓
+PENDING
+    ↓
+RUNNING
+    ↓
+FAILED
+    ↓
+DEAD LETTER QUEUE
+```
+
+---
+
+## 🧪 Example Use Cases
+
+- Background email processing
+- Scheduled notifications
+- Report generation
+- Data synchronization
+- Recurring maintenance jobs
+- Event-driven workflows
+
+---
+
+## 📈 Future Enhancements
+
+- WebSocket-based live dashboard
+- Job cancellation
+- Execution history tracking
+- Worker monitoring
+- Authentication & RBAC
+- Kubernetes deployment
+- Metrics & observability
 
 ---
