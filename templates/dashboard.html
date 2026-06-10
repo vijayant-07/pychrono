@@ -96,6 +96,54 @@
         </div>
 
     </div>
+    <div class="row mb-3">
+
+    <div class="col-md-6">
+
+        <input
+            type="text"
+            id="searchInput"
+            class="form-control"
+            placeholder="Search Job ID or Task..."
+            onkeyup="filterTable()">
+
+    </div>
+
+</div>
+
+<div class="mb-3">
+
+    <button class="btn btn-secondary btn-sm"
+            onclick="filterStatus('ALL')">
+        All
+    </button>
+
+    <button class="btn btn-warning btn-sm"
+            onclick="filterStatus('PENDING')">
+        Pending
+    </button>
+
+    <button class="btn btn-info btn-sm"
+            onclick="filterStatus('DISPATCHED')">
+        Dispatched
+    </button>
+
+    <button class="btn btn-primary btn-sm"
+            onclick="filterStatus('RUNNING')">
+        Running
+    </button>
+
+    <button class="btn btn-success btn-sm"
+            onclick="filterStatus('COMPLETED')">
+        Completed
+    </button>
+
+    <button class="btn btn-danger btn-sm"
+            onclick="filterStatus('FAILED')">
+        Failed
+    </button>
+
+</div>
 
     <div class="card">
 
@@ -109,98 +157,191 @@
 
         <div class="card-body">
 
-            <table class="table table-striped">
+        <table
+    id="jobsTable"
+    class="table table-striped">
 
-                <thead>
+    <thead>
 
-                <tr>
+        <tr>
 
-                    <th>Job ID</th>
+            <th>Job ID</th>
 
-                    <th>Task</th>
+            <th>Task</th>
 
-                    <th>Status</th>
+            <th>Status</th>
 
-                    <th>Retries</th>
+            <th>Retries</th>
 
-                </tr>
+            <th>Actions</th>
 
-                </thead>
+        </tr>
 
-                <tbody>
+    </thead>
 
-                {% for job in jobs %}
+    <tbody>
 
-                <tr>
+        {% for job in jobs %}
 
-                    <td>
-                        {{ job.id }}
-                    </td>
+        <tr data-status="{{ job.status }}">
 
-                    <td>
-                        {{ job.task }}
-                    </td>
+            <td>
 
-                    <td>
+    <a
+        href="/jobs/{{ job.id }}/view"
+        class="text-decoration-none">
 
-                        {% if job.status == "COMPLETED" %}
+        {{ job.id[:8] }}
 
-                        <span class="badge bg-success">
-                            COMPLETED
-                        </span>
+    </a>
 
-                        {% elif job.status == "FAILED" %}
+</td>
 
-                        <span class="badge bg-danger">
-                            FAILED
-                        </span>
+            <td>
+                {{ job.task }}
+            </td>
 
-                        {% elif job.status == "RUNNING" %}
+            <td>
 
-                        <span class="badge bg-primary">
-                            RUNNING
-                        </span>
+                {% if job.status == "COMPLETED" %}
 
-                        {% elif job.status == "RETRYING" %}
+                <span class="badge bg-success">
+                    COMPLETED
+                </span>
 
-                        <span class="badge bg-warning">
-                            RETRYING
-                        </span>
+                {% elif job.status == "FAILED" %}
 
-                        {% elif job.status == "DISPATCHED" %}
+                <span class="badge bg-danger">
+                    FAILED
+                </span>
 
-                        <span class="badge bg-info">
-                            DISPATCHED
-                        </span>
+                {% elif job.status == "RUNNING" %}
 
-                        {% else %}
+                <span class="badge bg-primary">
+                    RUNNING
+                </span>
 
-                        <span class="badge bg-secondary">
-                            {{ job.status }}
-                        </span>
+                {% elif job.status == "RETRYING" %}
 
-                        {% endif %}
+                <span class="badge bg-warning">
+                    RETRYING
+                </span>
 
-                    </td>
+                {% elif job.status == "DISPATCHED" %}
 
-                    <td>
-                        {{ job.retries }}
-                    </td>
+                <span class="badge bg-info">
+                    DISPATCHED
+                </span>
 
-                </tr>
+                {% else %}
 
-                {% endfor %}
+                <span class="badge bg-secondary">
+                    {{ job.status }}
+                </span>
 
-                </tbody>
+                {% endif %}
 
-            </table>
+            </td>
+
+            <td>
+    {{ job.retries }}
+</td>
+
+<td>
+
+{% if job.status == "FAILED" %}
+
+<form
+    method="POST"
+    action="/jobs/{{ job.id }}/retry">
+
+    <button
+        class="btn btn-danger btn-sm">
+
+        Retry
+
+    </button>
+
+</form>
+
+{% else %}
+
+-
+
+{% endif %}
+
+</td>
+
+        </tr>
+
+        {% endfor %}
+
+    </tbody>
+
+</table>
 
         </div>
 
     </div>
 
 </div>
+<script>
 
+function filterTable() {
+
+    let input =
+        document.getElementById(
+            "searchInput"
+        );
+
+    let filter =
+        input.value.toLowerCase();
+
+    let rows =
+        document.querySelectorAll(
+            "#jobsTable tbody tr"
+        );
+
+    rows.forEach(row => {
+
+        let text =
+            row.textContent.toLowerCase();
+
+        row.style.display =
+            text.includes(filter)
+            ? ""
+            : "none";
+    });
+}
+
+function filterStatus(status) {
+
+    let rows =
+        document.querySelectorAll(
+            "#jobsTable tbody tr"
+        );
+
+    rows.forEach(row => {
+
+        let rowStatus =
+            row.dataset.status;
+
+        if (
+            status === "ALL" ||
+            rowStatus === status
+        ) {
+
+            row.style.display = "";
+
+        } else {
+
+            row.style.display = "none";
+
+        }
+    });
+}
+
+</script>
 </body>
 
 </html>

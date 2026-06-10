@@ -5,6 +5,7 @@ from fastapi import Request
 
 from core.models import Job
 from storage.redis_store import RedisStore
+from fastapi.responses import RedirectResponse
 
 import time
 import uuid
@@ -95,3 +96,61 @@ async def jobs_by_status(
 async def get_stats():
 
     return store.get_stats()
+
+@app.get("/jobs/{job_id}/view")
+async def job_view(
+    request: Request,
+    job_id: str
+):
+
+    job_json = store.get_job(job_id)
+
+    if not job_json:
+        return {
+            "error": "Job not found"
+        }
+
+    job = json.loads(job_json)
+
+    return templates.TemplateResponse(
+        request=request,
+        name="job_details.html",
+        context={
+            "job": job
+        }
+    )
+
+@app.post("/jobs/{job_id}/retry")
+async def retry_job(job_id: str):
+
+    success = store.requeue_job(
+        job_id
+    )
+
+    if not success:
+        return {
+            "error": "Job not found"
+        }
+
+    return RedirectResponse(
+        url="/dashboard",
+        status_code=303
+    )
+
+@app.get("/dead-letter")
+async def dead_letter_jobs():
+
+    return store.get_dead_letter_jobs()
+
+@app.get("/dashboard/dead-letter")
+async def dead_letter_dashboard(
+    request: Request
+):
+
+    return templates.TemplateResponse(
+        request=request,
+        name="dead_letter.html",
+        context={
+            "jobs": store.get_dead_letter_jobs()
+        }
+    )

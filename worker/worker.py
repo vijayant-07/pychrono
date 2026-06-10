@@ -1,4 +1,5 @@
 import asyncio
+import time
 
 from core.nats_client import NATSClient
 from core.models import Job
@@ -6,16 +7,17 @@ from storage.redis_store import RedisStore
 
 store = RedisStore()
 
+
 async def process_job(job: Job):
 
-    print(
-        f"Executing job {job.id} with payload {job.payload}"
-    )
-
-    # simulate failure
-
     if job.payload.get("fail"):
-        raise Exception("Simulated failure")
+        raise Exception(
+            "Simulated failure"
+        )
+
+    print(
+        f"Executing job {job.id}"
+    )
 
 
 async def message_handler(msg):
@@ -32,23 +34,55 @@ async def message_handler(msg):
         job.status = "COMPLETED"
         store.update_job(job)
 
+        print(
+            f"Job completed: {job.id}"
+        )
+
         await msg.ack()
 
     except Exception as e:
 
-        print("Error:", e)
+        print(
+            f"Job failed: {job.id}"
+        )
+
+        print(
+            f"Error: {e}"
+        )
 
         job.retries += 1
 
         if job.retries < job.max_retries:
 
-            job.status = "RETRYING"
+            print(
+                f"Retrying job {job.id} "
+                f"({job.retries}/{job.max_retries})"
+            )
+
+            job.status = "PENDING"
+
+            # retry after 10 seconds
+            job.run_at = time.time() + 10
+
+            # add back to scheduler queue
+            store.add_job(job)
+
+            # update metadata
+            store.update_job(job)
 
         else:
 
+            print(
+                f"Job permanently failed: {job.id}"
+            )
+
             job.status = "FAILED"
 
-        store.update_job(job)
+            job.last_error = str(e)
+
+            store.update_job(job)
+
+            store.move_to_dlq(job)
 
         await msg.ack()
 

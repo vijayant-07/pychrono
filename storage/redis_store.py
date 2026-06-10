@@ -114,3 +114,55 @@ class RedisStore:
             stats[status] += 1
 
         return stats
+    
+    def requeue_job(self, job_id):
+
+        job_json = self.get_job(job_id)
+
+        if not job_json:
+            return False
+
+        job = json.loads(job_json)
+
+        job["status"] = "PENDING"
+
+        job["retries"] = 0
+
+        job["run_at"] = time.time() + 5
+
+        r.zadd(
+            "jobs",
+            {
+                json.dumps(job): job["run_at"]
+            }
+        )
+
+        r.hset(
+            "job_details",
+            job_id,
+            json.dumps(job)
+        )
+
+        return True
+    
+    def move_to_dlq(self, job):
+
+        r.hset(
+            "dead_letter_jobs",
+            job.id,
+            json.dumps(job.__dict__)
+        )
+    
+    def get_dead_letter_jobs(self):
+
+        jobs = []
+
+        for _, job_json in r.hgetall(
+            "dead_letter_jobs"
+        ).items():
+
+            jobs.append(
+                json.loads(job_json)
+            )
+
+        return jobs
