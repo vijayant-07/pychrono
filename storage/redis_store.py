@@ -5,6 +5,10 @@ import redis
 
 
 REDIS_URL = os.getenv("REDIS_URL")
+print("=" * 50)
+print("REDIS_URL =", os.getenv("REDIS_URL"))
+print("REDIS_HOST =", os.getenv("REDIS_HOST"))
+print("=" * 50)
 
 if REDIS_URL:
 
@@ -31,6 +35,7 @@ else:
         port=6379,
         decode_responses=True
     )
+print("Redis client initialized")
 
 class RedisStore:
 
