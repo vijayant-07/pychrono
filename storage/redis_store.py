@@ -1,20 +1,36 @@
-import redis
 import json
 import time
-
 import os
 import redis
 
-REDIS_HOST = os.getenv(
-    "REDIS_HOST",
-    "localhost"
-)
 
-r = redis.Redis(
-    host=REDIS_HOST,
-    port=6379,
-    decode_responses=True
-)
+REDIS_URL = os.getenv("REDIS_URL")
+
+if REDIS_URL:
+
+    print("Using Railway Redis")
+
+    r = redis.from_url(
+        REDIS_URL,
+        decode_responses=True
+    )
+
+else:
+
+    REDIS_HOST = os.getenv(
+        "REDIS_HOST",
+        "localhost"
+    )
+
+    print(
+        f"Using Local Redis: {REDIS_HOST}"
+    )
+
+    r = redis.Redis(
+        host=REDIS_HOST,
+        port=6379,
+        decode_responses=True
+    )
 
 class RedisStore:
 
